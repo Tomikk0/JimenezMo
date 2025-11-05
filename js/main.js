@@ -1365,10 +1365,21 @@ async function loadAllData() {
     const bootstrapPromise = fetchBootstrapData();
 
     if (appliedCachedData) {
+      // 🔧 JAVÍTÁS: Ne frissítsük azonnal, ha van cache
       bootstrapPromise
         .then(result => {
-          if (!processBootstrapResult(result)) {
-            console.warn('⚠️ Bootstrap frissítés nem alkalmazható, marad a gyorsítótár');
+          if (!result || !result.data) return;
+          
+          // Csak akkor alkalmazzuk, ha valóban változott valami
+          const hasChanges = JSON.stringify(result.data) !== JSON.stringify(cachedBootstrap);
+          
+          if (hasChanges) {
+            console.log('🔄 Változások észlelve, lista frissítése...');
+            processBootstrapResult(result);
+          } else {
+            console.log('✅ Nincs változás, cache aktuális');
+            // Csak a cache timestamp-et frissítjük
+            scheduleBootstrapPersistence(result.data);
           }
         })
         .catch(error => {
