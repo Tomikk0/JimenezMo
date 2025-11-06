@@ -320,66 +320,18 @@ function renderCars(cars) {
 
     const showActions = Boolean(currentUser);
     const hasTagMap = typeof tagOptionMap !== 'undefined' && tagOptionMap instanceof Map && tagOptionMap.size > 0;
-    const countByModel = new Map();
 
-    cars.forEach(car => {
-      const key = (car.Model || '').trim().toLowerCase();
-      if (!key) {
-        return;
-      }
-      countByModel.set(key, (countByModel.get(key) || 0) + 1);
-    });
-
-    const multipleEntries = [];
-    const singleEntries = [];
+    const strip = document.createElement('div');
+    strip.className = 'car-card-strip car-card-strip-primary';
 
     cars.forEach(car => {
       const display = buildCarDisplayData(car, hasTagMap);
-      const key = (car.Model || '').trim().toLowerCase();
-      const entry = {
-        car,
-        display,
-        canDelete: showActions && (car.Hozzáadta === currentUser?.tagName || currentUser?.role === 'admin')
-      };
-
-      if (key && (countByModel.get(key) || 0) > 1) {
-        multipleEntries.push(entry);
-      } else {
-        singleEntries.push(entry);
-      }
+      const canDelete = showActions && (car.Hozzáadta === currentUser?.tagName || currentUser?.role === 'admin');
+      strip.appendChild(createCarCardElement(car, display, showActions, canDelete));
     });
 
-    const fragment = document.createDocumentFragment();
-
-    if (multipleEntries.length > 0) {
-      const multiStrip = document.createElement('div');
-      multiStrip.className = 'car-card-strip car-card-strip-primary';
-      multipleEntries.forEach(({ car, display, canDelete }) => {
-        multiStrip.appendChild(createCarCardElement(car, display, showActions, canDelete));
-      });
-      fragment.appendChild(multiStrip);
-    }
-
-    if (singleEntries.length > 0) {
-      const miscSection = document.createElement('section');
-      miscSection.className = 'car-card-section car-card-section-misc';
-
-      const heading = document.createElement('div');
-      heading.className = 'car-card-section-title';
-      miscSection.appendChild(heading);
-
-      const miscStrip = document.createElement('div');
-      miscStrip.className = 'car-card-strip car-card-strip-misc';
-      singleEntries.forEach(({ car, display, canDelete }) => {
-        miscStrip.appendChild(createCarCardElement(car, display, showActions, canDelete));
-      });
-      miscSection.appendChild(miscStrip);
-
-      fragment.appendChild(miscSection);
-    }
-
     grid.innerHTML = '';
-    grid.appendChild(fragment);
+    grid.appendChild(strip);
   } catch (error) {
     console.error('renderCars hiba:', error);
     const grid = document.getElementById('carCardGrid');
