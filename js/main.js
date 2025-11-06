@@ -1,102 +1,82 @@
-// === JAVÍTOTT HALLOWEEN THEME FUNKCIÓK ===
+// === SÖTÉT TÉMA FUNKCIÓK ===
 
-// Halloween theme toggle
-function toggleHalloweenTheme() {
-    const body = document.body;
-    const isHalloween = body.classList.contains('halloween-theme');
+const DARK_THEME_CLASS = 'dark-theme';
+const DARK_THEME_STORAGE_KEY = 'darkTheme';
 
-    if (isHalloween) {
-        body.classList.remove('halloween-theme');
-        localStorage.setItem('halloweenTheme', 'false');
-        removeHalloweenDecorations();
-        console.log('🎃 Halloween theme kikapcsolva');
-    } else {
-        body.classList.add('halloween-theme');
-        localStorage.setItem('halloweenTheme', 'true');
-        addHalloweenDecorations();
-        console.log('🎃 Halloween theme bekapcsolva');
-    }
-
-    syncHalloweenTheme();
+function isDarkThemeActive() {
+  return document.body.classList.contains(DARK_THEME_CLASS);
 }
 
-// Halloween dekorációk hozzáadása
-function addHalloweenDecorations() {
-    if (!document.body.classList.contains('halloween-theme')) return;
-    if (document.querySelector('.halloween-decoration')) return;
-    
-    const decorations = ['🎃', '👻', '🦇', '🕷️', '🕸️', '💀'];
-    const body = document.body;
-    
-    for (let i = 0; i < 15; i++) {
-        const deco = document.createElement('div');
-        deco.className = 'halloween-decoration halloween-float';
-        deco.textContent = decorations[Math.floor(Math.random() * decorations.length)];
-        deco.style.left = Math.random() * 100 + 'vw';
-        deco.style.top = Math.random() * 100 + 'vh';
-        deco.style.fontSize = (Math.random() * 2 + 1) + 'em';
-        deco.style.opacity = Math.random() * 0.3 + 0.1;
-        deco.style.animationDelay = Math.random() * 5 + 's';
-        body.appendChild(deco);
-    }
+function syncDarkThemeToggle() {
+  const toggle = document.querySelector('.theme-toggle');
+  if (!toggle) {
+    return;
+  }
+
+  if (isDarkThemeActive()) {
+    toggle.innerHTML = '☀️';
+    toggle.setAttribute('aria-label', 'Világos téma bekapcsolása');
+    toggle.title = 'Világos téma váltása';
+  } else {
+    toggle.innerHTML = '🌙';
+    toggle.setAttribute('aria-label', 'Sötét téma bekapcsolása');
+    toggle.title = 'Sötét téma váltása';
+  }
 }
 
-// Dekorációk eltávolítása
-function removeHalloweenDecorations() {
-    const decorations = document.querySelectorAll('.halloween-decoration');
-    decorations.forEach(deco => {
-        deco.remove();
-    });
+function applyDarkThemeClass(enabled) {
+  document.body.classList.toggle(DARK_THEME_CLASS, enabled);
+  localStorage.setItem(DARK_THEME_STORAGE_KEY, enabled ? 'true' : 'false');
+  console.log(enabled ? '🌙 Sötét téma bekapcsolva' : '🌙 Sötét téma kikapcsolva');
+  syncDarkThemeToggle();
 }
 
-// Halloween theme betöltése
-function loadHalloweenTheme() {
-    const savedTheme = localStorage.getItem('halloweenTheme');
-    if (savedTheme === 'true') {
-        document.body.classList.add('halloween-theme');
-        console.log('🎃 Halloween theme betöltve');
-    }
-
-    syncHalloweenTheme();
+function toggleDarkTheme() {
+  applyDarkThemeClass(!isDarkThemeActive());
 }
 
-// Toggle gomb hozzáadása
-function addHalloweenToggle() {
-    if (document.querySelector('.halloween-toggle')) return;
-    
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'halloween-toggle';
-    toggleBtn.innerHTML = '🎃';
-    toggleBtn.title = 'Halloween Theme Kapcsoló';
-    toggleBtn.onclick = toggleHalloweenTheme;
+function loadDarkThemePreference() {
+  const savedTheme = localStorage.getItem(DARK_THEME_STORAGE_KEY);
+  if (savedTheme === 'true') {
+    document.body.classList.add(DARK_THEME_CLASS);
+    console.log('🌙 Sötét téma betöltve');
+  } else if (savedTheme === 'false') {
+    document.body.classList.remove(DARK_THEME_CLASS);
+  }
+
+  syncDarkThemeToggle();
+}
+
+function ensureDarkThemeToggle() {
+  let toggleBtn = document.querySelector('.theme-toggle');
+  if (!toggleBtn) {
+    toggleBtn = document.createElement('button');
+    toggleBtn.className = 'theme-toggle';
+    toggleBtn.type = 'button';
+    toggleBtn.addEventListener('click', toggleDarkTheme);
     document.body.appendChild(toggleBtn);
-}
-function syncHalloweenTheme() {
-    if (document.body.classList.contains('halloween-theme')) {
-        addHalloweenDecorations();
-    } else {
-        removeHalloweenDecorations();
-    }
+  }
+
+  syncDarkThemeToggle();
 }
 
-const halloweenObserver = new MutationObserver(function(mutations) {
-    for (const mutation of mutations) {
-        if (mutation.attributeName === 'class') {
-            syncHalloweenTheme();
-            break;
-        }
+const darkThemeObserver = new MutationObserver(function(mutations) {
+  for (const mutation of mutations) {
+    if (mutation.attributeName === 'class') {
+      syncDarkThemeToggle();
+      break;
     }
+  }
 });
 
-halloweenObserver.observe(document.body, {
-    attributes: true,
-    attributeFilter: ['class']
+darkThemeObserver.observe(document.body, {
+  attributes: true,
+  attributeFilter: ['class']
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    addHalloweenToggle();
-    loadHalloweenTheme();
-    syncHalloweenTheme();
+  ensureDarkThemeToggle();
+  loadDarkThemePreference();
 });
 // === OLDAL KEZELÉS ===
 function showPage(pageName) {
